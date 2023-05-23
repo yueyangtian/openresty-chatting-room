@@ -1,0 +1,108 @@
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport" />
+    <script type="text/javascript">
+        var ws = null;
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`)
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        function WebSocketConn() {
+
+            var wsloc = window.sessionStorage.getItem("ws");
+            if (ws != null && ws.readyState == 1) {
+                log("already online");
+                return
+            }
+
+            if ("WebSocket" in window) {
+
+                // Let us open a web socket
+                ws = new WebSocket(wsloc);
+                ws.onopen = function () {
+                    LoginMsg();
+                    log('success join in channel');
+                };
+
+                ws.onmessage = function (event) {
+                    var msg = JSON.parse(event.data)
+                    log(msg.username + ": " + msg.text)
+                };
+
+                ws.onclose = function () {
+                    // websocket is closed.
+                    log("close connection");
+                    window.location.href = "./index.html"
+                };
+
+                ws.onerror = function (event) {
+                    console.log("error " + event.data);
+                };
+            } else {
+                // The browser doesn't support WebSocket
+                alert("WebSocket NOT supported by your Browser!");
+            }
+        }
+
+        function SendMsg() {
+            var txt = document.getElementById('msgtext').value
+            if (txt === "") {
+                window.alert("input must not null");
+                return
+            }
+            if (ws != null && ws.readyState == 1) {
+                var msg = {
+                    username: getCookie("username"),
+                    token: getCookie("token"),
+                    uid: getCookie("uid"),
+                    text: txt
+                }
+                ws.send(JSON.stringify(msg));
+                document.getElementById('msgtext').value = "";
+            } else {
+                log('please join channel frist');
+            }
+        }
+        function LoginMsg() {
+            var msg = {
+                username: getCookie("username"),
+                token: getCookie("token"),
+                uid: getCookie("uid"),
+                text: "notify"
+            }
+            ws.send(JSON.stringify(msg));
+        }
+
+        function WebSocketClose() {
+            if (ws != null && ws.readyState == 1) {
+                ws.close();
+                log("conn broken");
+            } else {
+                log("not have active conn")
+            }
+        }
+
+        function log(text) {
+            var li = document.createElement('li');
+            li.appendChild(document.createTextNode(text));
+            document.getElementById('log').appendChild(li);
+            return false;
+        }
+
+        function keyUp(e) {
+            if(e.keyCode == 13) {
+                SendMsg();
+            }
+        }
+    </script>
+</head>
+
+<body onload="WebSocketConn()">
+    <a href="#" onclick="WebSocketClose();">leave</a><br />
+    <br />
+    <input id="msgtext" type="text" onkeyup="keyUp(event);"/><br />
+    <a href="#" onclick="SendMsg();">send</a><br />
+    <ol id="log"></ol>
+    </div>
+</body>

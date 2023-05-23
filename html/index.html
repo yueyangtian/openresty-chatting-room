@@ -1,0 +1,52 @@
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport" />
+</head>
+
+<body>
+    <script type="text/javascript">
+        function Login() {
+            var name = document.getElementById('username').value
+            if (name === "") {
+                window.alert("username must not null")
+                return
+            }
+
+            var channel = document.getElementById('ws').value
+            if (channel === "") {
+                window.alert("channel must not null")
+                return
+            }
+
+            var obj = {
+                username: name
+            };
+
+            var httpRequest = new XMLHttpRequest();
+            httpRequest.open('POST', './login', true);
+            httpRequest.setRequestHeader("Content-type", "application/json")
+            httpRequest.send(JSON.stringify(obj));
+            httpRequest.onreadystatechange = function () {
+                if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+                    var res = JSON.parse(httpRequest.responseText);
+                    console.log(res);
+                    if (res.code == 0) {
+                        window.location.href = "./ws.html";
+                        window.sessionStorage.setItem("ws", "ws://" + window.location.host + "/s/" + channel);
+                    } else {
+                        window.alert("login web server error cause error code: ", res.code)
+                    }
+                }
+            };
+
+
+        }
+    </script>
+    <br>username
+    <input id="username" type="text" required="required" /><br />
+    <br>channel
+    <input id="ws" type="text" required="required" /><br />
+    <a href="#" onclick="Login();">join in channel</a><br />
+    <ol id="log"></ol>
+    </div>
+</body>
